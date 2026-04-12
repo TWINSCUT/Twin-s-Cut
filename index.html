@@ -1998,14 +1998,12 @@ body { font-family: 'Jost', sans-serif; background: var(--black); color: var(--w
 </head>
 <body>
   <script type="module">
-  // Import the functions you need from the SDKs you need
+  // Import Firebase SDKs
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyBGEBdr72izPrgSzwnmsA6dflb3lZ_Bd-0",
     authDomain: "twin-s-cut.firebaseapp.com",
@@ -2019,6 +2017,37 @@ body { font-family: 'Jost', sans-serif; background: var(--black); color: var(--w
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+
+  // --- Firestore Utility Functions ---
+  // Bookings: CRUD and real-time sync
+  function listenBookings(callback) {
+    return onSnapshot(collection(db, "bookings"), (snapshot) => {
+      const bookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(bookings);
+    });
+  }
+
+  async function getBookings() {
+    const snapshot = await getDocs(collection(db, "bookings"));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async function saveBooking(booking) {
+    // If booking has id, update; else, add
+    if (booking.id) {
+      const ref = doc(db, "bookings", booking.id);
+      await setDoc(ref, booking);
+    } else {
+      await addDoc(collection(db, "bookings"), booking);
+    }
+  }
+
+  async function deleteBooking(bookingId) {
+    await deleteDoc(doc(db, "bookings", bookingId));
+  }
+
+  // --- Replace all localStorage usage for bookings below (other data types to follow) ---
 </script>
 
 <!-- HOME SCREEN -->
